@@ -21,7 +21,7 @@ def enforce_lockout(function):
     def wrapper(*args, **kwargs):
         # Get request details from thread local
         request = getattr(thread_namespace, 'lockoutrequest', None)
-        
+
         if request is None:
             # The call to authenticate must not have come via an HttpRequest, so
             # lockout is not enforced.
@@ -38,30 +38,37 @@ def enforce_lockout(function):
         if settings.USE_USER_AGENT:
             useragent = request.META.get('HTTP_USER_AGENT', '')
             params.append(useragent)
-        
+
         key = generate_base_key(*params)
         attempts = cache.get(key) or 0
-        
+
         if attempts >= settings.MAX_ATTEMPTS:
             raise LockedOut()
-        
-        result = function(*args, **kwargs)
-        
+
+        try:
+            result = function(*args, **kwargs)
+        except:
+            _handle_authentication_failure(key, attempts)
+            raise
+
         if result is None:
-            try:
-                attempts = cache.incr(key)
-            except ValueError:
-                # No such key, so set it
-                cache.set(key, 1, settings.ENFORCEMENT_WINDOW)
-            
-            # If attempts is max allowed, set a new key with that
-            # value so that the lockout time will be based on the most
-            # recent login attempt.
-            if attempts >= settings.MAX_ATTEMPTS:
-                cache.set(key, attempts, settings.LOCKOUT_TIME)
-        
+           _handle_authentication_failure(key, attempts)
+
         return result
-    
+
     return wraps(function)(wrapper)
+
+def _handle_authentication_failure(key, attempts):
+    try:
+        attempts = cache.incr(key)
+    except ValueError:
+        # No such key, so set it
+        cache.set(key, 1, settings.ENFORCEMENT_WINDOW)
+
+    # If attempts is max allowed, set a new key with that
+    # value so that the lockout time will be based on the most
+    # recent login attempt.
+    if attempts >= settings.MAX_ATTEMPTS:
+        cache.set(key, attempts, settings.LOCKOUT_TIME)
 
 ########################################################################
