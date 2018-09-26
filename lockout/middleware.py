@@ -5,7 +5,7 @@ Lockout Middleware
 ########################################################################
 
 from threading import local
-import settings
+from lockout import settings
 thread_namespace = local()
 
 class LockoutMiddleware(object):

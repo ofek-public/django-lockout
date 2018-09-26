@@ -9,7 +9,7 @@ from django.test.client import RequestFactory
 from django.contrib.auth.models import User
 from django.contrib import auth
 from django.conf import settings
-import settings as lockout_settings
+from lockout import settings as lockout_settings
 from .middleware import LockoutMiddleware
 from .exceptions import LockedOut
 from .utils import reset_attempts
