@@ -22,7 +22,7 @@ class LockoutMiddleware(object):
             self.installed = getattr(self, 'installed', False)
             if not self.installed:
                 # Import here to avoid circular import.
-                from decorators import enforce_lockout
+                from .decorators import enforce_lockout
                 from django.contrib import auth
                 auth.authenticate = enforce_lockout(auth.authenticate)
                 self.installed = True

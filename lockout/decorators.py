@@ -6,7 +6,7 @@ Lockout Decorators
 
 from django.utils.functional import wraps
 from django.core.cache import cache
-from middleware import thread_namespace
+from .middleware import thread_namespace
 from .exceptions import LockedOut
 from .utils import generate_base_key
 import settings
